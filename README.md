@@ -1,82 +1,243 @@
-GEO(AEO) Browser Extension (Planning)
+# GEO / AEO Inspector
 
-목표
-- 웹 페이지를 GEO/AEO 관점에서 진단하고, 필요 시 JSON-LD 초안(draft)을 생성해 “수정/반영”까지 이어지게 하는 브라우저 익스텐션을 만든다.
-- 체크(진단): 스키마/메타/구조/답변 친화성
-- 생성(보조): JSON-LD 없는 페이지에 대해 안전한 범위에서 초안 생성
-- 공유(협업): 결과를 리포트로 내보내기(복사/다운로드)
------------
-구현 방식 후보
-1) DevTools 패널형 (추천)
-   - DevTools에 전용 패널을 추가해, 한 화면에서 진단/생성/리포트를 처리한다.
+**GEO / AEO Inspector** is a Chrome Extension that analyzes webpages from a **GEO (Generative Engine Optimization)** and **AEO (Answer Engine Optimization)** perspective.
 
-- 장점
-  - 렌더링 이후 DOM 분석에 강함(SPA 포함)
-  - 체크리스트/리포트 UI 구성 용이
-  - 추후 네트워크/헤더 기반 진단 확장 가능
+The extension helps developers inspect webpage structure, metadata, and structured data readiness for modern search engines and AI-driven answer systems.
 
-- 구성
-  - devtools_page: 패널 UI
-  - content_script: DOM/메타/JSON-LD 수집
-  - service_worker: 메시지 중계, 저장, 내보내기
+---
 
-2) 페이지 오버레이형
-   - 문제 요소(H1, alt, 링크 텍스트 등)를 페이지 위에서 하이라이트.
+## What This Tool Does
 
-   - 장점: “여기 수정” 전달 쉬움
-   - 주의: 페이지 CSS 충돌 가능(스타일 격리 필요)
+The extension analyzes the currently open webpage and extracts:
 
-3) 팝업형(툴바)
-   - 간단 요약 위주. 구현은 빠르지만 깊은 분석은 한계.
-----------
-JSON-LD 생성 기능(없는 페이지 대상)
-  - 가능 여부 : 
-    가능. 다만 “완성본 자동 생성”이 아니라,
-    초안(draft) 생성 + 누락/불확실 필드 경고 + 검증 + 내보내기 형태가 안전하고 실무적.
+- page metadata
+- Open Graph tags
+- heading structure (H1 / H2)
+- existing JSON-LD structured data
+- breadcrumb candidates
 
-  - 생성 방식 3가지
-    1) 규칙 기반(추천: MVP)
-       - 페이지에서 추출 가능한 정보로 안전한 기본 스키마를 생성한다.
-    
-       1) 입력(추출)
-          - title, meta description, canonical
-          - og:*, twitter:*
-          - H1/H2, 대표 단락(요약용)
-          - 날짜/작성자(있는 경우)
-          - html[lang]
-          - Breadcrumb DOM(있는 경우)
+If structured data is missing, the extension can generate a **draft JSON-LD schema**.
 
-       2) 출력(기본 세트)
-          - WebPage + BreadcrumbList + Organization(+WebSite 옵션)
-          - 콘텐츠 유형이 명확하면 Article/NewsArticle/BlogPosting을 “추천”
+This tool is intended for:
 
-    2) 템플릿 + 사용자 입력(회사 프로필) 혼합 (실무형 베스트)
+- frontend developers
+- publishers
+- SEO / GEO / AEO practitioners
 
-       - 확장 설정에 “회사/사이트 프로필”을 저장하고(Organization, 로고, sameAs 등),
-       - 페이지별 추출값과 결합해 JSON-LD를 생성한다.
-         - Organization: 고정값
-         - WebPage/Article: 페이지별 자동
-         - Breadcrumb: 있으면 자동 / 없으면 경고
+---
 
-    3) LLM(옵션)
-       - 요약/추천 타입 선택 등은 유용하지만, 회사명/발행일/저자 등 팩트 필드는 추측 금지.
+## Key Features (MVP)
 
-    * 자동 삽입에 대한 원칙
-      - 확장 프로그램은 보통 서버에 저장 반영은 못하므로,
-      - “복사/다운로드/CMS 붙여넣기”가 기본
-      - 옵션으로 “이 페이지에서만 임시 주입(미리보기)” 제공 가능
+### Page Analysis
 
-  - 패널 UI 구성(추천)
+Extracts important SEO/AEO signals:
 
-    - Detected: 페이지에서 추출된 값(Title/Canonical/OG/Date/Author)
-    - Schema 추천: WebPage/Article/FAQPage 등 후보 + 이유
-    - Generated JSON-LD: 코드 + 복사 버튼
-    - Validation: 필수 키 누락/URL 불일치/파싱 오류
-    - (옵션) Diff: 기존 JSON-LD가 있으면 기존 vs 권장 변경점
+- title
+- meta description
+- canonical URL
+- Open Graph metadata
+- heading structure
+- existing JSON-LD blocks
 
-- 기술 스택 제안
-  - Chrome Extension Manifest V3
-  - TypeScript
-  - UI: React(DevTools 패널)
-  - 번들: Vite(멀티 엔트리)
-  - 검증: 1차(자체 규칙) + (선택) 외부 검증은 옵션 처리
+### Issue Detection
+
+Detects common page issues:
+
+- missing title
+- missing meta description
+- missing canonical URL
+- missing JSON-LD structured data
+- missing or multiple H1 tags
+- missing document language
+- optional Open Graph warnings
+
+### JSON-LD Draft Generation
+
+If no structured data is present, the extension generates a **WebPage JSON-LD draft**.
+
+Example:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://example.com/page#webpage",
+  "url": "https://example.com/page",
+  "name": "Example Page",
+  "description": "Example description",
+  "inLanguage": "ko-KR"
+}
+```
+
+Generated schemas are **developer drafts** and should be reviewed before production use.
+
+### Schema Recommendation
+
+The extension can recommend relevant schema types based on page structure, including:
+
+- WebPage
+- BreadcrumbList
+- Article
+- FAQPage
+- Product
+- LocalBusiness
+
+Recommendations are rule-based and should be reviewed by the developer.
+
+---
+
+## Documentation
+
+Project documentation is located in the **docs/** directory.
+
+| Document | Description |
+|--------|--------|
+| `docs/GEO-AEO-extension-spec.md` | Main product specification |
+| `docs/tasks.md` | Development roadmap |
+| `docs/schema-rules.md` | JSON-LD generation rules |
+| `docs/extractor-spec.md` | Page extraction specification |
+| `docs/schema-detection-rules.md` | Schema recommendation rules |
+| `docs/geo-aeo-validator-rules.md` | Page validation and issue detection rules |
+| `docs/ui-panel-spec.md` | Side panel UI specification |
+| `docs/architecture.md` | Extension architecture and data flow |
+| `docs/developer-guidelines.md` | Code style and development guidelines |
+| `docs/codex-build-prompt.md` | Codex implementation instructions |
+
+These documents define how the extension should analyze pages, generate schemas, validate issues, structure the UI, and organize implementation.
+
+---
+
+## Project Structure
+
+```txt
+geo-aeo-extension/
+├─ docs/
+│  ├─ GEO-AEO-extension-spec.md
+│  ├─ tasks.md
+│  ├─ schema-rules.md
+│  ├─ extractor-spec.md
+│  ├─ schema-detection-rules.md
+│  ├─ geo-aeo-validator-rules.md
+│  ├─ ui-panel-spec.md
+│  ├─ architecture.md
+│  ├─ developer-guidelines.md
+│  └─ codex-build-prompt.md
+├─ src/
+│  ├─ background/
+│  ├─ content/
+│  ├─ sidepanel/
+│  ├─ shared/
+│  └─ options/
+├─ public/
+├─ manifest.json
+├─ package.json
+├─ vite.config.ts
+├─ tsconfig.json
+└─ README.md
+```
+
+---
+
+## Development Setup
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run development build:
+
+```bash
+npm run dev
+```
+
+Build extension:
+
+```bash
+npm run build
+```
+
+---
+
+## Load Extension in Chrome
+
+1. Open Chrome
+2. Navigate to:
+
+```txt
+chrome://extensions
+```
+
+3. Enable **Developer Mode**
+4. Click **Load unpacked**
+5. Select the build directory
+
+The extension should now appear in your browser.
+
+---
+
+## Using Codex
+
+This project is structured to work well with AI coding tools such as Codex.
+
+To start implementation with Codex:
+
+```txt
+Read all files inside docs/ and implement the MVP described in those documents.
+```
+
+Or more explicitly:
+
+```txt
+Read docs/GEO-AEO-extension-spec.md, docs/tasks.md, docs/schema-rules.md, docs/extractor-spec.md, docs/schema-detection-rules.md, docs/geo-aeo-validator-rules.md, docs/ui-panel-spec.md, docs/architecture.md, docs/developer-guidelines.md, and docs/codex-build-prompt.md, then implement the extension MVP.
+```
+
+---
+
+## MVP Scope
+
+The first version focuses on:
+
+- page metadata extraction
+- JSON-LD detection
+- basic issue warnings
+- WebPage schema generation
+- rule-based schema recommendations
+- developer-focused side panel UI
+
+Advanced features such as AI summarization, FAQ schema generation, CMS integration, and scoring systems will be added later.
+
+---
+
+## Development Principles
+
+- Prefer rule-based extraction
+- Never guess factual data
+- Generated schemas are drafts
+- Keep architecture simple and maintainable
+- Separate extraction, validation, schema generation, and UI logic
+- Keep shared logic independent from Chrome APIs where possible
+
+---
+
+## Long Term Vision
+
+The GEO / AEO Inspector aims to become a **developer assistant for AI-ready websites**.
+
+Future features may include:
+
+- AI answer extraction analysis
+- automatic schema recommendations
+- GEO readiness scoring
+- structured data validation
+- report export
+- CMS integration
+- schema completeness checks
+- advanced content-type detection
+
+---
+
+## Notes
+
+This repository is intentionally documentation-driven so that both human developers and AI coding tools can understand the project clearly before implementation.
