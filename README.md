@@ -71,6 +71,35 @@ Example:
 
 Generated schemas are **developer drafts** and should be reviewed before production use.
 
+### Current MVP Data Flow
+
+The current implementation follows this flow:
+
+1. The content script extracts page metadata, Open Graph tags, headings, and existing JSON-LD from the active page.
+2. The side panel requests that page analysis when opened.
+3. Shared JSON-LD utilities safely parse each detected block, detect schema types, and preserve per-block parse failures.
+4. Shared validators produce rule-based issues from the extracted payload, including block-specific invalid JSON-LD warnings.
+5. The shared schema generator produces a WebPage JSON-LD draft only when the page has no JSON-LD.
+6. The side panel renders extracted data, existing JSON-LD blocks, issues, schema recommendations, and the generated JSON-LD with copy buttons.
+
+### Site-Wide Settings
+
+The options page stores site-wide defaults in `chrome.storage.local`.
+
+Supported fields:
+
+- organization name
+- organization url
+- organization logo
+- sameAs
+- website name
+- website url
+- default language
+
+When no JSON-LD exists on the current page, the generated `WebPage` draft can optionally include `isPartOf` and `publisher` using these saved settings.
+
+The options page also supports resetting stored defaults, and the side panel shows a compact summary of the currently loaded site-wide settings.
+
 ### Schema Recommendation
 
 The extension can recommend relevant schema types based on page structure, including:
@@ -102,6 +131,8 @@ Project documentation is located in the **docs/** directory.
 | `docs/architecture.md` | Extension architecture and data flow |
 | `docs/developer-guidelines.md` | Code style and development guidelines |
 | `docs/codex-build-prompt.md` | Codex implementation instructions |
+| `docs/manual-test-checklist.md` | Manual QA and regression checklist |
+| `docs/ai-log.md` | Running AI work log and summary history |
 
 These documents define how the extension should analyze pages, generate schemas, validate issues, structure the UI, and organize implementation.
 
@@ -121,7 +152,9 @@ geo-aeo-extension/
 │  ├─ ui-panel-spec.md
 │  ├─ architecture.md
 │  ├─ developer-guidelines.md
-│  └─ codex-build-prompt.md
+│  ├─ codex-build-prompt.md
+│  ├─ manual-test-checklist.md
+│  └─ ai-log.md
 ├─ src/
 │  ├─ background/
 │  ├─ content/
@@ -158,6 +191,12 @@ Build extension:
 npm run build
 ```
 
+Run shared logic tests:
+
+```bash
+npm test
+```
+
 ---
 
 ## Load Extension in Chrome
@@ -174,6 +213,12 @@ chrome://extensions
 5. Select the build directory
 
 The extension should now appear in your browser.
+
+---
+
+## AI Workflow
+
+When Codex solves problems in this repository, append a short summary of the work to `docs/ai-log.md`.
 
 ---
 
