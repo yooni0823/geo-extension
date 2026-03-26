@@ -43,6 +43,18 @@ export type Headings = {
   h2: string[];
 };
 
+export type ContentSignals = {
+  introParagraph: string;
+  paragraphCount: number;
+  listCount: number;
+  questionHeadingCount: number;
+  hasTimeElement: boolean;
+  hasAuthorLikeText: boolean;
+  externalLinkCount: number;
+  internalLinkCount: number;
+  genericInternalLinkCount: number;
+};
+
 export type PageAnalysisResult = {
   url: string;
   title: string;
@@ -52,6 +64,7 @@ export type PageAnalysisResult = {
   lang: string;
   openGraph: OpenGraphData;
   headings: Headings;
+  contentSignals: ContentSignals;
   jsonLd: string[];
   breadcrumbs: BreadcrumbItem[];
 };

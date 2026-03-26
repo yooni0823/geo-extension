@@ -45,6 +45,113 @@ function getTextList(documentRef: Document, selector: string): string[] {
     });
 }
 
+function getContentRoot(documentRef: Document): Element {
+  return (
+    documentRef.querySelector("main, article, [role='main']") ?? documentRef.body
+  );
+}
+
+function getMeaningfulTextItems(root: ParentNode, selector: string): string[] {
+  return Array.from(root.querySelectorAll(selector))
+    .map((element) => normalizeText(element.textContent))
+    .filter(Boolean);
+}
+
+function isExternalUrl(url: URL, pageOrigin: string): boolean {
+  return url.origin !== pageOrigin;
+}
+
+function isInternalUrl(url: URL, pageOrigin: string): boolean {
+  return url.origin === pageOrigin;
+}
+
+function isGenericAnchorText(text: string): boolean {
+  return [
+    "read more",
+    "learn more",
+    "click here",
+    "here",
+    "more",
+    "view more",
+    "details"
+  ].includes(text.toLowerCase());
+}
+
+function getContentSignals(documentRef: Document, pageUrl: string) {
+  const contentRoot = getContentRoot(documentRef);
+  const paragraphs = getMeaningfulTextItems(contentRoot, "p");
+  const introParagraph = paragraphs.find((paragraph) => paragraph.length >= 40) ?? "";
+  const headings = getMeaningfulTextItems(contentRoot, "h2, h3, h4");
+  const questionHeadingCount = headings.filter((heading) =>
+    /(^|\s)(what|why|how|when|where|who|which|can|should|is|are|do|does|did)\b|[?？]$/i.test(
+      heading
+    )
+  ).length;
+
+  const pageOrigin = new URL(pageUrl).origin;
+  let internalLinkCount = 0;
+  let externalLinkCount = 0;
+  let genericInternalLinkCount = 0;
+
+  for (const anchor of Array.from(contentRoot.querySelectorAll<HTMLAnchorElement>("a[href]"))) {
+    const href = normalizeText(anchor.getAttribute("href"));
+
+    if (
+      !href ||
+      href.startsWith("#") ||
+      href.startsWith("javascript:") ||
+      href.startsWith("mailto:") ||
+      href.startsWith("tel:")
+    ) {
+      continue;
+    }
+
+    const anchorText = normalizeText(anchor.textContent);
+
+    try {
+      const resolvedUrl = new URL(href, pageUrl);
+
+      if (isInternalUrl(resolvedUrl, pageOrigin)) {
+        internalLinkCount += 1;
+
+        if (anchorText && isGenericAnchorText(anchorText)) {
+          genericInternalLinkCount += 1;
+        }
+      } else if (isExternalUrl(resolvedUrl, pageOrigin)) {
+        externalLinkCount += 1;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  const hasTimeElement = Boolean(
+    documentRef.querySelector(
+      "time, [datetime], meta[property='article:published_time'], meta[name='author:published_time'], meta[name='pubdate'], meta[name='publish_date']"
+    )
+  );
+
+  const authorMeta = normalizeText(
+    documentRef.querySelector("meta[name='author']")?.getAttribute("content")
+  );
+  const authorText = getMeaningfulTextItems(
+    contentRoot,
+    "[rel='author'], [itemprop='author'], [class*='author'], [id*='author'], [class*='byline'], [id*='byline']"
+  );
+
+  return {
+    introParagraph,
+    paragraphCount: paragraphs.length,
+    listCount: contentRoot.querySelectorAll("ul, ol").length,
+    questionHeadingCount,
+    hasTimeElement,
+    hasAuthorLikeText: Boolean(authorMeta) || authorText.some((value) => value.length >= 3),
+    externalLinkCount,
+    internalLinkCount,
+    genericInternalLinkCount
+  };
+}
+
 function getJsonLdBlocks(documentRef: Document): string[] {
   return Array.from(
     documentRef.querySelectorAll<HTMLScriptElement>(
@@ -119,6 +226,7 @@ export function extractPageData(
       h1: getTextList(documentRef, "h1"),
       h2: getTextList(documentRef, "h2")
     },
+    contentSignals: getContentSignals(documentRef, pageUrl),
     jsonLd: getJsonLdBlocks(documentRef),
     breadcrumbs: getBreadcrumbs(documentRef)
   };

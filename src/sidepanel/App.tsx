@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getGeoRecommendations } from "../shared/geo-recommendations";
 import { analyzeJsonLdBlocks } from "../shared/jsonld";
 import { loadExtensionSettings } from "../shared/settings";
 import type {
@@ -12,6 +13,7 @@ import type {
 import { ExistingJsonLdSection } from "./components/ExistingJsonLdSection";
 import { generateSchemaDrafts, recommendSchemas } from "../shared/schema-generator";
 import { validatePageAnalysis } from "../shared/validators";
+import { GeoRecommendationsSection } from "./components/GeoRecommendationsSection";
 import { GeneratedJsonLdSection } from "./components/GeneratedJsonLdSection";
 import { IssuesSection } from "./components/IssuesSection";
 import { PageOverviewSection } from "./components/PageOverviewSection";
@@ -166,6 +168,7 @@ export function App() {
   }, []);
 
   const issues: Issue[] = pageData ? validatePageAnalysis(pageData) : [];
+  const geoRecommendations = pageData ? getGeoRecommendations(pageData) : [];
   const recommendations: SchemaRecommendation[] = pageData
     ? recommendSchemas(pageData, settings)
     : [];
@@ -228,9 +231,10 @@ export function App() {
         {pageData ? (
           <>
             <PageOverviewSection pageData={pageData} />
-            <ExistingJsonLdSection blocks={existingJsonLdBlocks} />
             <IssuesSection issues={issues} />
+            <GeoRecommendationsSection recommendations={geoRecommendations} />
             <RecommendationsSection recommendations={recommendations} />
+            <ExistingJsonLdSection blocks={existingJsonLdBlocks} />
             <GeneratedJsonLdSection
               existingJsonLdCount={pageData.jsonLd.length}
               generatedSchema={generatedSchema}

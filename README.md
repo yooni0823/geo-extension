@@ -3,6 +3,7 @@
 **GEO / AEO Inspector** is a Chrome Extension that analyzes webpages from a **GEO (Generative Engine Optimization)** and **AEO (Answer Engine Optimization)** perspective.
 
 The extension helps developers inspect webpage structure, metadata, and structured data readiness for modern search engines and AI-driven answer systems.
+It also provides practical GEO-focused recommendations about content structure, answer readiness, trust signals, and internal linking.
 
 ---
 
@@ -15,6 +16,7 @@ The extension analyzes the currently open webpage and extracts:
 - heading structure (H1 / H2)
 - existing JSON-LD structured data
 - breadcrumb candidates
+- GEO-oriented content quality signals
 
 If structured data is missing, the extension can generate a **draft JSON-LD schema**.
 
@@ -51,6 +53,15 @@ Detects common page issues:
 - missing document language
 - optional Open Graph warnings
 
+### GEO Recommendations
+
+Provides rule-based GEO suggestions beyond structured data, including:
+
+- content structure analysis
+- answer-ready formatting suggestions
+- trust signal checks
+- heading alignment and hierarchy improvements
+
 ### JSON-LD Draft Generation
 
 If no structured data is present, the extension generates a **WebPage JSON-LD draft**.
@@ -75,12 +86,13 @@ Generated schemas are **developer drafts** and should be reviewed before product
 
 The current implementation follows this flow:
 
-1. The content script extracts page metadata, Open Graph tags, headings, and existing JSON-LD from the active page.
+1. The content script extracts page metadata, Open Graph tags, headings, JSON-LD, and GEO content signals from the active page.
 2. The side panel requests that page analysis when opened.
 3. Shared JSON-LD utilities safely parse each detected block, detect schema types, and preserve per-block parse failures.
 4. Shared validators produce rule-based issues from the extracted payload, including block-specific invalid JSON-LD warnings.
-5. The shared schema generator produces a WebPage JSON-LD draft only when the page has no JSON-LD.
-6. The side panel renders extracted data, existing JSON-LD blocks, issues, schema recommendations, and the generated JSON-LD with copy buttons.
+5. The GEO recommendation layer evaluates page structure, trust signals, and answer-ready patterns without using AI.
+6. The shared schema generator produces a WebPage JSON-LD draft only when the page has no JSON-LD.
+7. The side panel renders extracted data, issues, GEO recommendations, schema recommendations, existing JSON-LD blocks, and the generated JSON-LD with copy buttons.
 
 ### Site-Wide Settings
 
@@ -126,13 +138,13 @@ Project documentation is located in the **docs/** directory.
 | `docs/schema-rules.md` | JSON-LD generation rules |
 | `docs/extractor-spec.md` | Page extraction specification |
 | `docs/schema-detection-rules.md` | Schema recommendation rules |
+| `docs/geo-recommendation-rules.md` | GEO recommendation rules |
 | `docs/geo-aeo-validator-rules.md` | Page validation and issue detection rules |
 | `docs/ui-panel-spec.md` | Side panel UI specification |
 | `docs/architecture.md` | Extension architecture and data flow |
 | `docs/developer-guidelines.md` | Code style and development guidelines |
 | `docs/codex-build-prompt.md` | Codex implementation instructions |
 | `docs/manual-test-checklist.md` | Manual QA and regression checklist |
-| `docs/ai-log.md` | Running AI work log and summary history |
 
 These documents define how the extension should analyze pages, generate schemas, validate issues, structure the UI, and organize implementation.
 
@@ -148,13 +160,13 @@ geo-aeo-extension/
 │  ├─ schema-rules.md
 │  ├─ extractor-spec.md
 │  ├─ schema-detection-rules.md
+│  ├─ geo-recommendation-rules.md
 │  ├─ geo-aeo-validator-rules.md
 │  ├─ ui-panel-spec.md
 │  ├─ architecture.md
 │  ├─ developer-guidelines.md
 │  ├─ codex-build-prompt.md
-│  ├─ manual-test-checklist.md
-│  └─ ai-log.md
+│  └─ manual-test-checklist.md
 ├─ src/
 │  ├─ background/
 │  ├─ content/
@@ -210,7 +222,7 @@ chrome://extensions
 
 3. Enable **Developer Mode**
 4. Click **Load unpacked**
-5. Select the build directory
+5. Select the `dist/` directory
 
 The extension should now appear in your browser.
 
