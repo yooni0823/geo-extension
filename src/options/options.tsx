@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { createTranslator } from "../shared/i18n";
+import { LanguageToggle } from "../shared/LanguageToggle";
 import {
   loadExtensionSettings,
   resetExtensionSettings,
   saveExtensionSettings
 } from "../shared/settings";
-import { defaultExtensionSettings, type ExtensionSettings } from "../shared/types";
+import {
+  defaultExtensionSettings,
+  type ExtensionSettings,
+  type UiLanguage
+} from "../shared/types";
 
 const pageStyle: React.CSSProperties = {
   margin: "0 auto",
@@ -40,6 +46,7 @@ const actionRowStyle: React.CSSProperties = {
 function OptionsApp() {
   const [formState, setFormState] = useState<ExtensionSettings>(defaultExtensionSettings);
   const [status, setStatus] = useState("");
+  const t = createTranslator(formState.uiLanguage);
 
   useEffect(() => {
     async function loadSettings() {
@@ -49,6 +56,12 @@ function OptionsApp() {
 
     void loadSettings();
   }, []);
+
+  useEffect(() => {
+    const translate = createTranslator(formState.uiLanguage);
+    document.title = translate("optionsTitle");
+    document.documentElement.lang = formState.uiLanguage;
+  }, [formState.uiLanguage]);
 
   function updateField<Key extends keyof ExtensionSettings>(
     key: Key,
@@ -60,23 +73,35 @@ function OptionsApp() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await saveExtensionSettings(formState);
-    setStatus("Settings saved to chrome.storage.local.");
+    setStatus(t("settingsSaved"));
   }
 
   async function handleReset() {
     const resetState = await resetExtensionSettings();
     setFormState(resetState);
-    setStatus("Settings reset to defaults.");
+    setStatus(createTranslator(resetState.uiLanguage)("settingsReset"));
+  }
+
+  async function handleLanguageChange(language: UiLanguage) {
+    const nextState = { ...formState, uiLanguage: language };
+    setFormState(nextState);
+    setStatus("");
+    await saveExtensionSettings(nextState);
   }
 
   return (
     <main style={pageStyle}>
-      <h1>GEO / AEO Inspector Settings</h1>
-      <p>Use these defaults when generating Organization and WebSite schema drafts.</p>
+      <div style={{ display: "grid", gap: 12, marginBottom: 16 }}>
+        <LanguageToggle language={formState.uiLanguage} onChange={handleLanguageChange} />
+        <div>
+          <h1>{t("optionsTitle")}</h1>
+          <p>{t("optionsDescription")}</p>
+        </div>
+      </div>
 
       <form style={formStyle} onSubmit={handleSubmit}>
         <label>
-          Organization Name
+          {t("organizationName")}
           <input
             style={inputStyle}
             value={formState.organizationName}
@@ -85,7 +110,7 @@ function OptionsApp() {
         </label>
 
         <label>
-          Organization URL
+          {t("organizationUrl")}
           <input
             style={inputStyle}
             value={formState.organizationUrl}
@@ -94,7 +119,7 @@ function OptionsApp() {
         </label>
 
         <label>
-          Organization Logo
+          {t("organizationLogo")}
           <input
             style={inputStyle}
             value={formState.organizationLogo}
@@ -103,7 +128,7 @@ function OptionsApp() {
         </label>
 
         <label>
-          SameAs
+          {t("sameAs")}
           <textarea
             style={{ ...inputStyle, minHeight: 88, resize: "vertical" }}
             value={formState.sameAs.join(", ")}
@@ -120,7 +145,7 @@ function OptionsApp() {
         </label>
 
         <label>
-          Website Name
+          {t("websiteName")}
           <input
             style={inputStyle}
             value={formState.websiteName}
@@ -129,7 +154,7 @@ function OptionsApp() {
         </label>
 
         <label>
-          Website URL
+          {t("websiteUrl")}
           <input
             style={inputStyle}
             value={formState.websiteUrl}
@@ -138,7 +163,7 @@ function OptionsApp() {
         </label>
 
         <label>
-          Default Language
+          {t("defaultLanguage")}
           <input
             style={inputStyle}
             value={formState.defaultLanguage}
@@ -159,7 +184,7 @@ function OptionsApp() {
               cursor: "pointer"
             }}
           >
-            Save Settings
+            {t("saveSettings")}
           </button>
 
           <button
@@ -177,7 +202,7 @@ function OptionsApp() {
               cursor: "pointer"
             }}
           >
-            Reset
+            {t("reset")}
           </button>
         </div>
       </form>

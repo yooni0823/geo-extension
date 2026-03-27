@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { getGeoRecommendations } from "../shared/geo-recommendations";
+import { createTranslator } from "../shared/i18n";
 import { analyzeJsonLdBlocks } from "../shared/jsonld";
-import { loadExtensionSettings } from "../shared/settings";
+import { LanguageToggle } from "../shared/LanguageToggle";
+import { loadExtensionSettings, saveExtensionSettings } from "../shared/settings";
 import type {
   Issue,
   ExtensionSettings,
   JsonLdBlockAnalysis,
   PageAnalysisResult,
   PageAnalysisResultMessage,
-  SchemaRecommendation
+  SchemaRecommendation,
+  UiLanguage
 } from "../shared/types";
 import { ExistingJsonLdSection } from "./components/ExistingJsonLdSection";
 import { generateSchemaDrafts, recommendSchemas } from "../shared/schema-generator";
@@ -66,31 +69,41 @@ const secondaryButtonStyle: React.CSSProperties = {
   whiteSpace: "nowrap"
 };
 
-function summarizeSettings(settings: ExtensionSettings): string[] {
+function summarizeSettings(
+  settings: ExtensionSettings,
+  language: UiLanguage
+): string[] {
+  const t = createTranslator(language);
   const summary: string[] = [];
 
   if (settings.organizationName || settings.organizationUrl) {
     summary.push(
-      `Organization: ${settings.organizationName || "-"}${settings.organizationUrl ? ` (${settings.organizationUrl})` : ""}`
+      t("organizationSummary", {
+        name: settings.organizationName || "-",
+        url: settings.organizationUrl ? ` (${settings.organizationUrl})` : ""
+      })
     );
   }
 
   if (settings.websiteName || settings.websiteUrl) {
     summary.push(
-      `WebSite: ${settings.websiteName || "-"}${settings.websiteUrl ? ` (${settings.websiteUrl})` : ""}`
+      t("websiteSummary", {
+        name: settings.websiteName || "-",
+        url: settings.websiteUrl ? ` (${settings.websiteUrl})` : ""
+      })
     );
   }
 
   if (settings.organizationLogo) {
-    summary.push(`Organization logo: ${settings.organizationLogo}`);
+    summary.push(t("organizationLogoSummary", { value: settings.organizationLogo }));
   }
 
   if (settings.sameAs.length > 0) {
-    summary.push(`sameAs: ${settings.sameAs.join(", ")}`);
+    summary.push(t("sameAsSummary", { value: settings.sameAs.join(", ") }));
   }
 
   if (settings.defaultLanguage) {
-    summary.push(`Default language: ${settings.defaultLanguage}`);
+    summary.push(t("defaultLanguageSummary", { value: settings.defaultLanguage }));
   }
 
   return summary;
@@ -110,7 +123,8 @@ export function App() {
     sameAs: [],
     websiteName: "",
     websiteUrl: "",
-    defaultLanguage: ""
+    defaultLanguage: "",
+    uiLanguage: "en"
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -126,7 +140,7 @@ export function App() {
         ]);
 
         if (!tabId) {
-          throw new Error("No active tab was found.");
+          throw new Error(createTranslator(loadedSettings.uiLanguage)("errorNoActiveTab"));
         }
 
         const response = (await chrome.tabs.sendMessage(tabId, {
@@ -134,7 +148,9 @@ export function App() {
         })) as PageAnalysisResultMessage | undefined;
 
         if (!response || response.type !== "PAGE_ANALYSIS_RESULT") {
-          throw new Error("The content script did not return page analysis data.");
+          throw new Error(
+            createTranslator(loadedSettings.uiLanguage)("errorContentScriptMissing")
+          );
         }
 
         if (!isMounted) {
@@ -151,7 +167,7 @@ export function App() {
         setError(
           caughtError instanceof Error
             ? caughtError.message
-            : "Failed to analyze the current page."
+            : createTranslator(settings.uiLanguage)("errorAnalyzeFailed")
         );
       } finally {
         if (isMounted) {
@@ -176,7 +192,14 @@ export function App() {
     ? analyzeJsonLdBlocks(pageData.jsonLd)
     : [];
   const generatedSchema = pageData ? generateSchemaDrafts(pageData, settings) : null;
-  const settingsSummary = summarizeSettings(settings);
+  const t = createTranslator(settings.uiLanguage);
+  const settingsSummary = summarizeSettings(settings, settings.uiLanguage);
+
+  async function handleLanguageChange(language: UiLanguage) {
+    const nextSettings = { ...settings, uiLanguage: language };
+    setSettings(nextSettings);
+    await saveExtensionSettings(nextSettings);
+  }
 
   return (
     <main style={containerStyle}>
@@ -185,25 +208,24 @@ export function App() {
           <div style={headerActionStyle}>
             <div>
               <h1 style={{ marginTop: 0 }}>GEO / AEO Inspector</h1>
-              <p style={mutedStyle}>
-                Analyze page metadata, validation issues, and draft JSON-LD from the active tab.
-              </p>
+              <p style={mutedStyle}>{t("appDescription")}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                void chrome.runtime.openOptionsPage();
-              }}
-              style={secondaryButtonStyle}
-            >
-              Open Settings
-            </button>
+            <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
+              <LanguageToggle language={settings.uiLanguage} onChange={handleLanguageChange} />
+              <button
+                type="button"
+                onClick={() => {
+                  void chrome.runtime.openOptionsPage();
+                }}
+                style={secondaryButtonStyle}
+              >
+                {t("openSettings")}
+              </button>
+            </div>
           </div>
-          <h2 style={{ marginBottom: 0, marginTop: 12, fontSize: 16 }}>Site-Wide Defaults</h2>
+          <h2 style={{ marginBottom: 0, marginTop: 12, fontSize: 16 }}>{t("siteWideDefaults")}</h2>
           {settingsSummary.length === 0 ? (
-            <p style={{ ...mutedStyle, marginTop: 8 }}>
-              No site-wide defaults are saved. Use the options page to add Organization and WebSite settings.
-            </p>
+            <p style={{ ...mutedStyle, marginTop: 8 }}>{t("noSiteWideDefaults")}</p>
           ) : (
             <ul style={summaryListStyle}>
               {settingsSummary.map((item) => (
@@ -217,27 +239,37 @@ export function App() {
 
         {loading ? (
           <section style={cardStyle}>
-            <p style={{ margin: 0 }}>Analyzing the current page...</p>
+            <p style={{ margin: 0 }}>{t("analyzingCurrentPage")}</p>
           </section>
         ) : null}
 
         {error ? (
           <section style={cardStyle}>
-            <h2 style={{ marginTop: 0 }}>Analysis Error</h2>
+            <h2 style={{ marginTop: 0 }}>{t("analysisError")}</h2>
             <p style={{ marginBottom: 0 }}>{error}</p>
           </section>
         ) : null}
 
         {pageData ? (
           <>
-            <PageOverviewSection pageData={pageData} />
-            <IssuesSection issues={issues} />
-            <GeoRecommendationsSection recommendations={geoRecommendations} />
-            <RecommendationsSection recommendations={recommendations} />
-            <ExistingJsonLdSection blocks={existingJsonLdBlocks} />
+            <PageOverviewSection pageData={pageData} language={settings.uiLanguage} />
+            <IssuesSection issues={issues} language={settings.uiLanguage} />
+            <GeoRecommendationsSection
+              recommendations={geoRecommendations}
+              language={settings.uiLanguage}
+            />
+            <RecommendationsSection
+              recommendations={recommendations}
+              language={settings.uiLanguage}
+            />
+            <ExistingJsonLdSection
+              blocks={existingJsonLdBlocks}
+              language={settings.uiLanguage}
+            />
             <GeneratedJsonLdSection
               existingJsonLdCount={pageData.jsonLd.length}
               generatedSchema={generatedSchema}
+              language={settings.uiLanguage}
             />
           </>
         ) : null}

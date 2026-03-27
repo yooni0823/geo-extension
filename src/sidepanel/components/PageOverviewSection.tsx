@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
-import type { PageAnalysisResult } from "../../shared/types";
+import { createTranslator } from "../../shared/i18n";
+import type { PageAnalysisResult, UiLanguage } from "../../shared/types";
 
 const sectionStyle: CSSProperties = {
   background: "#ffffff",
@@ -26,46 +27,56 @@ function renderList(items: string[]): string {
   return items.length > 0 ? items.join("\n") : "-";
 }
 
-export function PageOverviewSection({ pageData }: { pageData: PageAnalysisResult }) {
+export function PageOverviewSection({
+  pageData,
+  language
+}: {
+  pageData: PageAnalysisResult;
+  language: UiLanguage;
+}) {
+  const t = createTranslator(language);
+
   return (
     <section style={sectionStyle}>
-      <h2 style={{ marginTop: 0 }}>Page Overview</h2>
+      <h2 style={{ marginTop: 0 }}>{t("pageOverview")}</h2>
 
-      <div style={labelStyle}>URL</div>
+      <div style={labelStyle}>{t("url")}</div>
       <p style={valueStyle}>{pageData.url}</p>
 
-      <div style={labelStyle}>Title</div>
+      <div style={labelStyle}>{t("title")}</div>
       <p style={valueStyle}>{pageData.title || "-"}</p>
 
-      <div style={labelStyle}>Description</div>
+      <div style={labelStyle}>{t("description")}</div>
       <p style={valueStyle}>{pageData.description || "-"}</p>
 
-      <div style={labelStyle}>Canonical URL</div>
+      <div style={labelStyle}>{t("canonicalUrl")}</div>
       <p style={valueStyle}>{pageData.canonical || "-"}</p>
 
-      <div style={labelStyle}>Language</div>
+      <div style={labelStyle}>{t("language")}</div>
       <p style={valueStyle}>{pageData.lang || "-"}</p>
 
-      <div style={labelStyle}>Open Graph Title</div>
+      <div style={labelStyle}>{t("openGraphTitle")}</div>
       <p style={valueStyle}>{pageData.openGraph.title || "-"}</p>
 
-      <div style={labelStyle}>Open Graph Description</div>
+      <div style={labelStyle}>{t("openGraphDescription")}</div>
       <p style={valueStyle}>{pageData.openGraph.description || "-"}</p>
 
-      <div style={labelStyle}>Open Graph Image</div>
+      <div style={labelStyle}>{t("openGraphImage")}</div>
       <p style={valueStyle}>{pageData.openGraph.image || "-"}</p>
 
-      <div style={labelStyle}>Open Graph URL</div>
+      <div style={labelStyle}>{t("openGraphUrl")}</div>
       <p style={valueStyle}>{pageData.openGraph.url || "-"}</p>
 
-      <div style={labelStyle}>H1</div>
+      <div style={labelStyle}>{t("headingH1")}</div>
       <p style={valueStyle}>{renderList(pageData.headings.h1)}</p>
 
-      <div style={labelStyle}>H2</div>
+      <div style={labelStyle}>{t("headingH2")}</div>
       <p style={valueStyle}>{renderList(pageData.headings.h2)}</p>
 
-      <div style={labelStyle}>Existing JSON-LD</div>
-      <p style={{ ...valueStyle, marginBottom: 0 }}>{pageData.jsonLd.length} detected</p>
+      <div style={labelStyle}>{t("existingJsonLd")}</div>
+      <p style={{ ...valueStyle, marginBottom: 0 }}>
+        {t("detectedCount", { count: pageData.jsonLd.length })}
+      </p>
     </section>
   );
 }

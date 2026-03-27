@@ -1,4 +1,6 @@
 import type { CSSProperties } from "react";
+import { createTranslator } from "../../shared/i18n";
+import type { UiLanguage } from "../../shared/types";
 
 const sectionStyle: CSSProperties = {
   background: "#ffffff",
@@ -23,17 +25,21 @@ async function copyToClipboard(value: string) {
 
 export function GeneratedJsonLdSection({
   existingJsonLdCount,
-  generatedSchema
+  generatedSchema,
+  language
 }: {
   existingJsonLdCount: number;
   generatedSchema: Record<string, unknown> | null;
+  language: UiLanguage;
 }) {
+  const t = createTranslator(language);
+
   if (existingJsonLdCount > 0) {
     return (
       <section style={sectionStyle}>
-        <h2 style={{ marginTop: 0 }}>Generated JSON-LD</h2>
+        <h2 style={{ marginTop: 0 }}>{t("generatedJsonLd")}</h2>
         <p style={{ margin: 0 }}>
-          Existing JSON-LD detected on this page. {existingJsonLdCount} block(s) found.
+          {t("generatedJsonLdBlocked", { count: existingJsonLdCount })}
         </p>
       </section>
     );
@@ -42,8 +48,8 @@ export function GeneratedJsonLdSection({
   if (!generatedSchema) {
     return (
       <section style={sectionStyle}>
-        <h2 style={{ marginTop: 0 }}>Generated JSON-LD</h2>
-        <p style={{ margin: 0 }}>No JSON-LD draft is available for this page.</p>
+        <h2 style={{ marginTop: 0 }}>{t("generatedJsonLd")}</h2>
+        <p style={{ margin: 0 }}>{t("generatedJsonLdUnavailable")}</p>
       </section>
     );
   }
@@ -52,8 +58,8 @@ export function GeneratedJsonLdSection({
 
   return (
     <section style={sectionStyle}>
-      <h2 style={{ marginTop: 0 }}>Generated JSON-LD</h2>
-      <p>WebPage draft JSON-LD is shown below for review before publishing.</p>
+      <h2 style={{ marginTop: 0 }}>{t("generatedJsonLd")}</h2>
+      <p>{t("generatedJsonLdDescription")}</p>
       <button
         type="button"
         onClick={() => {
@@ -69,7 +75,7 @@ export function GeneratedJsonLdSection({
           cursor: "pointer"
         }}
       >
-        Copy JSON-LD
+        {t("copyJsonLd")}
       </button>
       <pre style={preStyle}>{formattedJson}</pre>
     </section>

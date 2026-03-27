@@ -1,4 +1,5 @@
 export type IssueSeverity = "info" | "warning" | "error";
+export type UiLanguage = "en" | "ko";
 
 export type IssueCode =
   | "MISSING_TITLE"
@@ -15,7 +16,7 @@ export type IssueCode =
 export type Issue = {
   code: IssueCode;
   severity: IssueSeverity;
-  message: string;
+  params?: Record<string, string | number>;
 };
 
 export type JsonLdBlockAnalysis = {
@@ -78,7 +79,6 @@ export type SchemaName =
 
 export type SchemaRecommendation = {
   schema: SchemaName;
-  reason: string;
 };
 
 export type ExtensionSettings = {
@@ -89,6 +89,7 @@ export type ExtensionSettings = {
   websiteName: string;
   websiteUrl: string;
   defaultLanguage: string;
+  uiLanguage: UiLanguage;
 };
 
 export const defaultExtensionSettings: ExtensionSettings = {
@@ -98,7 +99,8 @@ export const defaultExtensionSettings: ExtensionSettings = {
   sameAs: [],
   websiteName: "",
   websiteUrl: "",
-  defaultLanguage: ""
+  defaultLanguage: "",
+  uiLanguage: "en"
 };
 
 export type RequestPageAnalysisMessage = {

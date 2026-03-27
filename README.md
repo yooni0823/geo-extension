@@ -4,6 +4,9 @@
 
 The extension helps developers inspect webpage structure, metadata, and structured data readiness for modern search engines and AI-driven answer systems.
 It also provides practical GEO-focused recommendations about content structure, answer readiness, trust signals, and internal linking.
+The UI now supports manual English and Korean switching in both the side panel and the options page.
+The extension also supports bilingual UI (English / Korean) to improve usability in different environments.
+GEO recommendation content is also localized, so both the interface and recommendation copy support English and Korean.
 
 ---
 
@@ -41,6 +44,26 @@ Extracts important SEO/AEO signals:
 - heading structure
 - existing JSON-LD blocks
 
+### Bilingual UI (EN / KO)
+
+The extension supports a bilingual interface with a manual language toggle.
+
+- Switch between English and Korean using the EN / KO toggle
+- Language preference is stored in `chrome.storage.local`
+- Both the side panel and options page reflect the selected language
+
+The current implementation includes:
+
+- section titles
+- buttons and labels
+- status indicators (warning, info)
+- fixed UI strings such as "Why this matters"
+- localized GEO recommendation content in English and Korean
+- localized issue messages
+- localized schema recommendation content
+
+Future improvements may include broader translation coverage for additional extension outputs.
+
 ### Issue Detection
 
 Detects common page issues:
@@ -61,6 +84,7 @@ Provides rule-based GEO suggestions beyond structured data, including:
 - answer-ready formatting suggestions
 - trust signal checks
 - heading alignment and hierarchy improvements
+- a localized reason, suggested fix, and "Why this matters" explanation for each recommendation
 
 ### JSON-LD Draft Generation
 
@@ -107,6 +131,7 @@ Supported fields:
 - website name
 - website url
 - default language
+- ui language (`en` or `ko`)
 
 When no JSON-LD exists on the current page, the generated `WebPage` draft can optionally include `isPartOf` and `publisher` using these saved settings.
 
@@ -139,6 +164,7 @@ Project documentation is located in the **docs/** directory.
 | `docs/extractor-spec.md` | Page extraction specification |
 | `docs/schema-detection-rules.md` | Schema recommendation rules |
 | `docs/geo-recommendation-rules.md` | GEO recommendation rules |
+| `docs/i18n-guidelines.md` | Internationalization (i18n) guidelines |
 | `docs/geo-aeo-validator-rules.md` | Page validation and issue detection rules |
 | `docs/ui-panel-spec.md` | Side panel UI specification |
 | `docs/architecture.md` | Extension architecture and data flow |
@@ -161,6 +187,7 @@ geo-aeo-extension/
 │  ├─ extractor-spec.md
 │  ├─ schema-detection-rules.md
 │  ├─ geo-recommendation-rules.md
+│  ├─ i18n-guidelines.md
 │  ├─ geo-aeo-validator-rules.md
 │  ├─ ui-panel-spec.md
 │  ├─ architecture.md

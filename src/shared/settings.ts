@@ -34,7 +34,8 @@ export function normalizeExtensionSettings(
     websiteName: typeof value.websiteName === "string" ? value.websiteName : "",
     websiteUrl: typeof value.websiteUrl === "string" ? value.websiteUrl : "",
     defaultLanguage:
-      typeof value.defaultLanguage === "string" ? value.defaultLanguage : ""
+      typeof value.defaultLanguage === "string" ? value.defaultLanguage : "",
+    uiLanguage: value.uiLanguage === "ko" ? "ko" : "en"
   };
 }
 

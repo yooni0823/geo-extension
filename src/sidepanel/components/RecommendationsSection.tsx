@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
-import type { SchemaRecommendation } from "../../shared/types";
+import { createTranslator } from "../../shared/i18n";
+import type { SchemaRecommendation, UiLanguage } from "../../shared/types";
 
 const sectionStyle: CSSProperties = {
   background: "#ffffff",
@@ -9,22 +10,26 @@ const sectionStyle: CSSProperties = {
 };
 
 export function RecommendationsSection({
-  recommendations
+  recommendations,
+  language
 }: {
   recommendations: SchemaRecommendation[];
+  language: UiLanguage;
 }) {
+  const t = createTranslator(language);
+
   return (
     <section style={sectionStyle}>
-      <h2 style={{ marginTop: 0 }}>Schema Recommendations</h2>
+      <h2 style={{ marginTop: 0 }}>{t("schemaRecommendations")}</h2>
 
       {recommendations.length === 0 ? (
-        <p style={{ margin: 0 }}>No schema recommendations are available for this page yet.</p>
+        <p style={{ margin: 0 }}>{t("noSchemaRecommendations")}</p>
       ) : null}
 
       {recommendations.map((recommendation) => (
         <div key={recommendation.schema} style={{ marginBottom: 12 }}>
-          <strong>{recommendation.schema}</strong>
-          <p style={{ margin: "4px 0 0" }}>{recommendation.reason}</p>
+          <strong>{t.schema[recommendation.schema].title}</strong>
+          <p style={{ margin: "4px 0 0" }}>{t.schema[recommendation.schema].reason}</p>
         </div>
       ))}
     </section>

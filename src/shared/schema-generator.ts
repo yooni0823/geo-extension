@@ -39,29 +39,25 @@ export function recommendSchemas(
 
   if (pageData.jsonLd.length === 0 && pageData.title && pageData.canonical) {
     recommendations.push({
-      schema: "WebPage",
-      reason: "No JSON-LD was detected and the page has baseline metadata."
+      schema: "WebPage"
     });
   }
 
   if (pageData.breadcrumbs.length > 1) {
     recommendations.push({
-      schema: "BreadcrumbList",
-      reason: "Breadcrumb-like navigation was detected in the DOM."
+      schema: "BreadcrumbList"
     });
   }
 
   if (settings.organizationName && settings.organizationUrl) {
     recommendations.push({
-      schema: "Organization",
-      reason: "Organization settings are available in extension options."
+      schema: "Organization"
     });
   }
 
   if (settings.websiteName && settings.websiteUrl) {
     recommendations.push({
-      schema: "WebSite",
-      reason: "Website settings are available in extension options."
+      schema: "WebSite"
     });
   }
 

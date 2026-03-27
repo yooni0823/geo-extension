@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
-import type { JsonLdBlockAnalysis } from "../../shared/types";
+import { createTranslator } from "../../shared/i18n";
+import type { JsonLdBlockAnalysis, UiLanguage } from "../../shared/types";
 
 const sectionStyle: CSSProperties = {
   background: "#ffffff",
@@ -68,21 +69,25 @@ async function copyToClipboard(value: string) {
 }
 
 export function ExistingJsonLdSection({
-  blocks
+  blocks,
+  language
 }: {
   blocks: JsonLdBlockAnalysis[];
+  language: UiLanguage;
 }) {
+  const t = createTranslator(language);
+
   return (
     <section style={sectionStyle}>
-      <h2 style={{ marginTop: 0 }}>Existing JSON-LD</h2>
+      <h2 style={{ marginTop: 0 }}>{t("existingJsonLd")}</h2>
 
-      {blocks.length === 0 ? <p style={{ margin: 0 }}>No existing JSON-LD detected.</p> : null}
+      {blocks.length === 0 ? <p style={{ margin: 0 }}>{t("existingJsonLdEmpty")}</p> : null}
 
       {blocks.map((block) => (
         <details key={block.index} style={blockStyle}>
           <summary style={summaryStyle}>
             <div>
-              <strong>Block {block.index + 1}</strong>
+              <strong>{t("jsonLdBlock", { count: block.index + 1 })}</strong>
               <div style={headerMetaStyle}>
                 <span
                   style={{
@@ -92,7 +97,7 @@ export function ExistingJsonLdSection({
                     color: block.parseError ? "#b91c1c" : "#047857"
                   }}
                 >
-                  {block.parseError ? "Parse Failed" : "Parse Success"}
+                  {block.parseError ? t("parseFailed") : t("parseSuccess")}
                 </span>
 
                 {!block.parseError && block.schemaTypes.length > 0
@@ -130,21 +135,24 @@ export function ExistingJsonLdSection({
                 cursor: "pointer"
               }}
             >
-              Copy Block
+              {t("copyBlock")}
             </button>
           </summary>
 
           <div style={blockBodyStyle}>
             <div style={{ marginBottom: 12, color: block.parseError ? "#b91c1c" : "#111827" }}>
               {block.parseError
-                ? `Parse failed: ${block.parseError}`
-                : `Schema types: ${
-                    block.schemaTypes.length > 0 ? block.schemaTypes.join(", ") : "Unknown"
-                  }`}
+                ? `${t("parseFailed")}: ${block.parseError}`
+                : t("schemaTypes", {
+                    value:
+                      block.schemaTypes.length > 0
+                        ? block.schemaTypes.join(", ")
+                        : t("unknown")
+                  })}
             </div>
 
             <div>
-              <div style={labelStyle}>Raw JSON-LD</div>
+              <div style={labelStyle}>{t("rawJsonLd")}</div>
               <pre style={preStyle}>{block.raw}</pre>
             </div>
           </div>
