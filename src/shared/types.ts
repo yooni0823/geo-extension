@@ -8,6 +8,8 @@ export type IssueCode =
   | "MISSING_JSON_LD"
   | "MULTIPLE_H1"
   | "MISSING_H1"
+  | "EMPTY_H1"
+  | "H1_FALLBACK_ALT"
   | "EMPTY_LANG"
   | "MISSING_OG_TITLE"
   | "MISSING_OG_DESCRIPTION"
@@ -40,6 +42,8 @@ export type OpenGraphData = {
 };
 
 export type Headings = {
+  h1Count: number;
+  h1ImageAltFallbackCount: number;
   h1: string[];
   h2: string[];
 };

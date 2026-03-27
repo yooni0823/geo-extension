@@ -33,17 +33,31 @@ export function validatePageAnalysis(pageData: PageAnalysisResult): Issue[] {
     });
   }
 
-  if (pageData.headings.h1.length > 1) {
+  if (pageData.headings.h1Count > 1) {
     issues.push({
       code: "MULTIPLE_H1",
       severity: "warning"
     });
   }
 
-  if (pageData.headings.h1.length === 0) {
+  if (pageData.headings.h1Count === 0) {
     issues.push({
       code: "MISSING_H1",
       severity: "warning"
+    });
+  }
+
+  if (pageData.headings.h1Count > 0 && pageData.headings.h1.length === 0) {
+    issues.push({
+      code: "EMPTY_H1",
+      severity: "warning"
+    });
+  }
+
+  if (pageData.headings.h1ImageAltFallbackCount > 0) {
+    issues.push({
+      code: "H1_FALLBACK_ALT",
+      severity: "info"
     });
   }
 
