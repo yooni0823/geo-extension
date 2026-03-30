@@ -58,6 +58,12 @@ export type ContentSignals = {
   externalLinkCount: number;
   internalLinkCount: number;
   genericInternalLinkCount: number;
+  hasPriceLikeText: boolean;
+  hasProductLikeSignals: boolean;
+  hasAddressLikeText: boolean;
+  hasPhoneLikeText: boolean;
+  hasMapLikeEmbed: boolean;
+  hasOpeningHoursLikeText: boolean;
 };
 
 export type PageAnalysisResult = {
@@ -79,7 +85,10 @@ export type SchemaName =
   | "BreadcrumbList"
   | "Organization"
   | "WebSite"
-  | "Article";
+  | "Article"
+  | "FAQPage"
+  | "Product"
+  | "LocalBusiness";
 
 export type SchemaRecommendation = {
   schema: SchemaName;

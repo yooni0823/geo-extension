@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { createTranslator } from "../../shared/i18n";
+import type { GeoScoreReasonCode } from "../../shared/geo-score";
 import type { JsonLdBlockAnalysis, UiLanguage } from "../../shared/types";
 
 const sectionStyle: CSSProperties = {
@@ -70,21 +71,50 @@ async function copyToClipboard(value: string) {
 
 export function ExistingJsonLdSection({
   blocks,
-  language
+  language,
+  activeScoreReason
 }: {
   blocks: JsonLdBlockAnalysis[];
   language: UiLanguage;
+  activeScoreReason: GeoScoreReasonCode | null;
 }) {
   const t = createTranslator(language);
+  const highlightEmptyState = activeScoreReason === "NO_JSON_LD";
 
   return (
-    <section style={sectionStyle}>
+    <section
+      id="existing-jsonld-section"
+      style={{
+        ...sectionStyle,
+        background:
+          highlightEmptyState || activeScoreReason === "JSON_LD_PARSE_FAILURE"
+            ? "#fffbeb"
+            : "#ffffff",
+        borderColor:
+          highlightEmptyState || activeScoreReason === "JSON_LD_PARSE_FAILURE"
+            ? "#f59e0b"
+            : "#d1d5db"
+      }}
+    >
       <h2 style={{ marginTop: 0 }}>{t("existingJsonLd")}</h2>
 
       {blocks.length === 0 ? <p style={{ margin: 0 }}>{t("existingJsonLdEmpty")}</p> : null}
 
       {blocks.map((block) => (
-        <details key={block.index} style={blockStyle}>
+        <details
+          key={block.index}
+          style={{
+            ...blockStyle,
+            background:
+              activeScoreReason === "JSON_LD_PARSE_FAILURE" && block.parseError
+                ? "#fffbeb"
+                : "#ffffff",
+            borderColor:
+              activeScoreReason === "JSON_LD_PARSE_FAILURE" && block.parseError
+                ? "#f59e0b"
+                : "#d1d5db"
+          }}
+        >
           <summary style={summaryStyle}>
             <div>
               <strong>{t("jsonLdBlock", { count: block.index + 1 })}</strong>

@@ -4,6 +4,7 @@
 
 The extension helps developers inspect webpage structure, metadata, and structured data readiness for modern search engines and AI-driven answer systems.
 It also provides practical GEO-focused recommendations about content structure, answer readiness, trust signals, and internal linking.
+It includes a rule-based GEO Score for quick score-based evaluation of the current page.
 The UI now supports manual English and Korean switching in both the side panel and the options page.
 The extension also supports bilingual UI (English / Korean) to improve usability in different environments.
 GEO recommendation content is also localized, so both the interface and recommendation copy support English and Korean.
@@ -63,6 +64,14 @@ The current implementation includes:
 - localized schema recommendation content
 
 Future improvements may include broader translation coverage for additional extension outputs.
+
+### GEO Score
+
+The extension provides a simple, rule-based GEO Score for the current page.
+
+- score categories cover metadata, structure, JSON-LD, content clarity, and trust signals
+- the score is explainable and derived from existing rule-based analysis
+- each category is shown in the side panel with a total score, status label, and main deduction reasons
 
 ### Issue Detection
 
@@ -164,6 +173,7 @@ Project documentation is located in the **docs/** directory.
 | `docs/extractor-spec.md` | Page extraction specification |
 | `docs/schema-detection-rules.md` | Schema recommendation rules |
 | `docs/geo-recommendation-rules.md` | GEO recommendation rules |
+| `docs/geo-score-rules.md` | GEO score rules |
 | `docs/i18n-guidelines.md` | Internationalization (i18n) guidelines |
 | `docs/geo-aeo-validator-rules.md` | Page validation and issue detection rules |
 | `docs/ui-panel-spec.md` | Side panel UI specification |
@@ -187,6 +197,7 @@ geo-aeo-extension/
 │  ├─ extractor-spec.md
 │  ├─ schema-detection-rules.md
 │  ├─ geo-recommendation-rules.md
+│  ├─ geo-score-rules.md
 │  ├─ i18n-guidelines.md
 │  ├─ geo-aeo-validator-rules.md
 │  ├─ ui-panel-spec.md

@@ -161,6 +161,16 @@ function isGenericAnchorText(text: string): boolean {
   ].includes(text.toLowerCase());
 }
 
+function hasAnyMatchingElement(root: ParentNode, selector: string): boolean {
+  return Boolean(root.querySelector(selector));
+}
+
+function hasTextMatchingElements(root: ParentNode, selector: string, pattern: RegExp): boolean {
+  return Array.from(root.querySelectorAll(selector)).some((element) =>
+    pattern.test(normalizeText(element.textContent))
+  );
+}
+
 function getContentSignals(documentRef: Document, pageUrl: string) {
   const contentRoot = getContentRoot(documentRef);
   const paragraphs = getMeaningfulTextItems(contentRoot, "p");
@@ -222,6 +232,42 @@ function getContentSignals(documentRef: Document, pageUrl: string) {
     contentRoot,
     "[rel='author'], [itemprop='author'], [class*='author'], [id*='author'], [class*='byline'], [id*='byline']"
   );
+  const hasPriceLikeText =
+    hasAnyMatchingElement(
+      contentRoot,
+      "[itemprop='price'], [data-price], [class*='price'], [id*='price'], [aria-label*='price' i]"
+    ) ||
+    hasTextMatchingElements(
+      contentRoot,
+      "p, li, span, strong, div",
+      /([$€£¥₩]\s?\d)|(\b\d[\d,]*(\.\d{2})?\s?(usd|eur|gbp|krw|jpy)\b)/i
+    );
+  const hasProductLikeSignals = hasAnyMatchingElement(
+    contentRoot,
+    "[itemtype*='Product'], [data-product], [class*='product'], [id*='product']"
+  );
+  const hasAddressLikeText = hasAnyMatchingElement(
+    contentRoot,
+    "address, [itemprop='address'], [class*='address'], [id*='address']"
+  );
+  const hasPhoneLikeText = hasAnyMatchingElement(
+    contentRoot,
+    "a[href^='tel:'], [itemprop='telephone'], [class*='phone'], [id*='phone'], [class*='tel'], [id*='tel']"
+  );
+  const hasMapLikeEmbed = hasAnyMatchingElement(
+    contentRoot,
+    "iframe[src*='maps'], iframe[src*='google.com/maps'], [class*='map'], [id*='map'], [data-map]"
+  );
+  const hasOpeningHoursLikeText =
+    hasAnyMatchingElement(
+      contentRoot,
+      "[itemprop*='openingHours'], [class*='hours'], [id*='hours'], [class*='open'], [id*='open']"
+    ) ||
+    hasTextMatchingElements(
+      contentRoot,
+      "p, li, div, span",
+      /\b(mon|tue|wed|thu|fri|sat|sun)\b|\b(am|pm)\b|\bopening hours\b|\bbusiness hours\b/i
+    );
 
   return {
     introParagraph,
@@ -232,7 +278,13 @@ function getContentSignals(documentRef: Document, pageUrl: string) {
     hasAuthorLikeText: Boolean(authorMeta) || authorText.some((value) => value.length >= 3),
     externalLinkCount,
     internalLinkCount,
-    genericInternalLinkCount
+    genericInternalLinkCount,
+    hasPriceLikeText,
+    hasProductLikeSignals,
+    hasAddressLikeText,
+    hasPhoneLikeText,
+    hasMapLikeEmbed,
+    hasOpeningHoursLikeText
   };
 }
 

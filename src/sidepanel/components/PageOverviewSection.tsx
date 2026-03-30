@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { createTranslator } from "../../shared/i18n";
+import type { GeoScoreReasonCode } from "../../shared/geo-score";
 import type { PageAnalysisResult, UiLanguage } from "../../shared/types";
 
 const sectionStyle: CSSProperties = {
@@ -29,15 +30,18 @@ function renderList(items: string[]): string {
 
 export function PageOverviewSection({
   pageData,
-  language
+  language,
+  activeScoreReason
 }: {
   pageData: PageAnalysisResult;
   language: UiLanguage;
+  activeScoreReason: GeoScoreReasonCode | null;
 }) {
   const t = createTranslator(language);
+  const highlightH2 = activeScoreReason === "MISSING_H2";
 
   return (
-    <section style={sectionStyle}>
+    <section id="page-overview-section" style={sectionStyle}>
       <h2 style={{ marginTop: 0 }}>{t("pageOverview")}</h2>
 
       <div style={labelStyle}>{t("url")}</div>
@@ -70,8 +74,27 @@ export function PageOverviewSection({
       <div style={labelStyle}>{t("headingH1")}</div>
       <p style={valueStyle}>{renderList(pageData.headings.h1)}</p>
 
-      <div style={labelStyle}>{t("headingH2")}</div>
-      <p style={valueStyle}>{renderList(pageData.headings.h2)}</p>
+      <div
+        style={{
+          ...labelStyle,
+          background: highlightH2 ? "#fef3c7" : "transparent",
+          display: "inline-block",
+          borderRadius: highlightH2 ? 4 : 0,
+          padding: highlightH2 ? "2px 6px" : 0
+        }}
+      >
+        {t("headingH2")}
+      </div>
+      <p
+        style={{
+          ...valueStyle,
+          background: highlightH2 ? "#fffbeb" : "transparent",
+          borderRadius: highlightH2 ? 6 : 0,
+          padding: highlightH2 ? "6px 8px" : 0
+        }}
+      >
+        {renderList(pageData.headings.h2)}
+      </p>
 
       <div style={labelStyle}>{t("existingJsonLd")}</div>
       <p style={{ ...valueStyle, marginBottom: 0 }}>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getGeoRecommendations } from "../shared/geo-recommendations";
+import { getGeoScore, type GeoScoreReasonCode } from "../shared/geo-score";
 import { createTranslator } from "../shared/i18n";
 import { analyzeJsonLdBlocks } from "../shared/jsonld";
 import { LanguageToggle } from "../shared/LanguageToggle";
@@ -17,6 +18,7 @@ import { ExistingJsonLdSection } from "./components/ExistingJsonLdSection";
 import { generateSchemaDrafts, recommendSchemas } from "../shared/schema-generator";
 import { validatePageAnalysis } from "../shared/validators";
 import { GeoRecommendationsSection } from "./components/GeoRecommendationsSection";
+import { GeoScoreSection } from "./components/GeoScoreSection";
 import { GeneratedJsonLdSection } from "./components/GeneratedJsonLdSection";
 import { IssuesSection } from "./components/IssuesSection";
 import { PageOverviewSection } from "./components/PageOverviewSection";
@@ -35,6 +37,13 @@ const stackStyle: React.CSSProperties = {
   gap: 12
 };
 
+const topBarStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 12
+};
+
 const cardStyle: React.CSSProperties = {
   background: "#ffffff",
   border: "1px solid #d1d5db",
@@ -50,13 +59,6 @@ const mutedStyle: React.CSSProperties = {
 const summaryListStyle: React.CSSProperties = {
   margin: "8px 0 0",
   paddingLeft: 18
-};
-
-const headerActionStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: 12
 };
 
 const secondaryButtonStyle: React.CSSProperties = {
@@ -128,6 +130,7 @@ export function App() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
+  const [activeScoreReason, setActiveScoreReason] = useState<GeoScoreReasonCode | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -192,6 +195,15 @@ export function App() {
     ? analyzeJsonLdBlocks(pageData.jsonLd)
     : [];
   const generatedSchema = pageData ? generateSchemaDrafts(pageData, settings) : null;
+  const geoScore = pageData
+    ? getGeoScore(
+        pageData,
+        issues,
+        geoRecommendations,
+        recommendations,
+        existingJsonLdBlocks
+      )
+    : null;
   const t = createTranslator(settings.uiLanguage);
   const settingsSummary = summarizeSettings(settings, settings.uiLanguage);
 
@@ -201,29 +213,54 @@ export function App() {
     await saveExtensionSettings(nextSettings);
   }
 
+  function handleScoreReasonSelect(reason: GeoScoreReasonCode, sectionId: string) {
+    setActiveScoreReason(reason);
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  useEffect(() => {
+    if (!activeScoreReason) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setActiveScoreReason(null);
+    }, 2600);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [activeScoreReason]);
+
   return (
     <main style={containerStyle}>
       <div style={stackStyle}>
+        <div style={topBarStyle}>
+          <LanguageToggle language={settings.uiLanguage} onChange={handleLanguageChange} />
+          <button
+            type="button"
+            onClick={() => {
+              void chrome.runtime.openOptionsPage();
+            }}
+            style={secondaryButtonStyle}
+          >
+            {t("openSettings")}
+          </button>
+        </div>
+
         <section style={cardStyle}>
-          <div style={headerActionStyle}>
-            <div>
-              <h1 style={{ marginTop: 0 }}>GEO / AEO Inspector</h1>
-              <p style={mutedStyle}>{t("appDescription")}</p>
-            </div>
-            <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
-              <LanguageToggle language={settings.uiLanguage} onChange={handleLanguageChange} />
-              <button
-                type="button"
-                onClick={() => {
-                  void chrome.runtime.openOptionsPage();
-                }}
-                style={secondaryButtonStyle}
-              >
-                {t("openSettings")}
-              </button>
-            </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              marginBottom: 10
+            }}
+          >
+            <h1 style={{ margin: 0, fontSize: 18, lineHeight: 1.2 }}>GEO Inspector</h1>
           </div>
-          <h2 style={{ marginBottom: 0, marginTop: 12, fontSize: 16 }}>{t("siteWideDefaults")}</h2>
+          <h2 style={{ marginBottom: 0, marginTop: 0, fontSize: 16 }}>{t("siteWideDefaults")}</h2>
           {settingsSummary.length === 0 ? (
             <p style={{ ...mutedStyle, marginTop: 8 }}>{t("noSiteWideDefaults")}</p>
           ) : (
@@ -252,19 +289,37 @@ export function App() {
 
         {pageData ? (
           <>
-            <PageOverviewSection pageData={pageData} language={settings.uiLanguage} />
-            <IssuesSection issues={issues} language={settings.uiLanguage} />
+            {geoScore ? (
+              <GeoScoreSection
+                score={geoScore}
+                language={settings.uiLanguage}
+                onReasonSelect={handleScoreReasonSelect}
+              />
+            ) : null}
+            <PageOverviewSection
+              pageData={pageData}
+              language={settings.uiLanguage}
+              activeScoreReason={activeScoreReason}
+            />
+            <IssuesSection
+              issues={issues}
+              language={settings.uiLanguage}
+              activeScoreReason={activeScoreReason}
+            />
             <GeoRecommendationsSection
               recommendations={geoRecommendations}
               language={settings.uiLanguage}
+              activeScoreReason={activeScoreReason}
             />
             <RecommendationsSection
               recommendations={recommendations}
               language={settings.uiLanguage}
+              activeScoreReason={activeScoreReason}
             />
             <ExistingJsonLdSection
               blocks={existingJsonLdBlocks}
               language={settings.uiLanguage}
+              activeScoreReason={activeScoreReason}
             />
             <GeneratedJsonLdSection
               existingJsonLdCount={pageData.jsonLd.length}
